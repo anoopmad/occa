@@ -21,8 +21,12 @@ option(ALLOW_OPENMP "Allow OpenMP" OFF)
 option(ALLOW_OPENCL "Allow OpenCL" OFF)
 option(ALLOW_METAL "Allow Metal" OFF)
 option(ALLOW_HIP "Allow HIP" OFF)
-#option(ALLOW_ONEAPI "Allow OneAPI" OFF)
 option(ENABLE_TESTS "Enable tests" OFF)
+
+# DPC++ Support
+# DPC++ can be enabled with OpenCL or with Level0 backend 
+option(ALLOW_DPCPP "Allow DPC++" OFF)
+option(ALLOW_L0 "Allow Level0" OFF)
 
 find_package(Threads REQUIRED)
 set(CUDA_USE_STATIC_CUDA_RUNTIME OFF)
