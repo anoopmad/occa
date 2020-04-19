@@ -120,7 +120,6 @@ cCompiler = $(CC)
 linkerFlags = $(LDFLAGS)
 #=================================================
 
-
 #---[ Paths/Flags ]-------------------------------
 paths = -I$(OCCA_DIR)/include
 paths += $(foreach path, $(subst :, ,$(OCCA_INCLUDE_PATH)), -I$(path))
@@ -155,6 +154,8 @@ compilerPthreadFlag  = $(shell . $(OCCA_DIR)/include/occa/scripts/shellTools.sh;
 compilerSupportsMPI    = $(shell . $(OCCA_DIR)/include/occa/scripts/shellTools.sh; compilerSupportsMPI    "$(compiler)")
 compilerSupportsOpenMP = $(shell . $(OCCA_DIR)/include/occa/scripts/shellTools.sh; compilerSupportsOpenMP "$(compiler)")
 compilerOpenMPFlag     = $(shell . $(OCCA_DIR)/include/occa/scripts/shellTools.sh; compilerOpenMPFlag     "$(compiler)")
+# OMP Offload Testing (Anoop)
+compilerSupportsOpenMPOffload = $(shell . $(OCCA_DIR)/include/occa/scripts/shellTools.sh; compilerSupportsOpenMPOffload "$(compiler)")
 #=================================================
 
 
@@ -189,7 +190,7 @@ ifeq ($(usingLinux),1)
 else ifeq ($(usingMacOS),1)
 
 	OCCA_OS := OCCA_MACOS_OS
-  flags += -Wno-deprecated-declarations
+  compilerFlags += -Wno-deprecated-declarations
   linkerFlags += -framework accelerate -framework CoreServices
   soNameFlag = -Wl,-install_name,@rpath/libocca.dylib
   soExt = dylib
@@ -231,14 +232,21 @@ endif
 ifdef OCCA_OPENMP_ENABLED
   openmpEnabled  = $(OCCA_OPENMP_ENABLED)
   fOpenmpEnabled = $(OCCA_OPENMP_ENABLED)
+# OMP Offload Testing (Anoop)
+  ifeq ($(compilerSupportsOpenMPOffload),1)
+    compilerFlags += -qnextgen -fiopenmp -fopenmp-targets=spir64
+  else ifeq ($(openmpEnabled),1)
+    compilerFlags += $(call compilerOpenMPFlag)
+  endif 
 else
-  openmpEnabled  = $(call compilerSupportsOpenMP)
 
-  ifeq ($(openmpEnabled),1)
-    flags += $(call compilerOpenMPFlag)
-  endif
+  # OMP Offload Testing (Anoop)
+  ifeq ($(compilerSupportsOpenMPOffload),1)
+    compilerFlags += -qnextgen -fiopenmp -fopenmp-targets=spir64 
+  else ifeq ($(compilerSupportsOpenMP),1)
+    compilerFlags += $(compilerOpenMPFlag)
+  endif 
 endif
-
 
 #---[ CUDA ]----------------------------
 ifdef OCCA_CUDA_ENABLED

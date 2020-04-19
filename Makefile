@@ -99,7 +99,7 @@ MAKE_COMPILED_DEFINES := $(shell \
  [ ! -f "$(COMPILED_DEFINES)" -o -n "$(shell diff -q $(COMPILED_DEFINES) $(NEW_COMPILED_DEFINES))" ] \
  && cp "$(NEW_COMPILED_DEFINES)" "$(COMPILED_DEFINES)" \
 )
-MAKE_COMPILED_DEFINES := $(shell rm $(NEW_COMPILED_DEFINES))
+#MAKE_COMPILED_DEFINES := $(shell rm $(NEW_COMPILED_DEFINES))
 
 all: $(objects) $(outputs)
 	@(. $(OCCA_DIR)/include/occa/scripts/shellTools.sh && installOcca)

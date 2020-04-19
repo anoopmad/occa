@@ -434,7 +434,9 @@ function compilerOpenMPFlag {
 
     case "$vendor" in
         GCC|LLVM)        echo "-fopenmp" ;;
-        INTEL|PATHSCALE) echo "-openmp"  ;;
+	# OMP Offload Testing (Anoop)
+	INTEL)		 echo "-qopenmp" ;;
+	PATHSCALE) 	 echo "-openmp"  ;;
         CRAY)            echo ""         ;;
         IBM)             echo "-qsmp"    ;;
         PGI)             echo "-mp"      ;;
@@ -442,6 +444,14 @@ function compilerOpenMPFlag {
         *)               echo ""         ;;
     esac
 }
+# OMP Offload Testing (Anoop)
+function compilerOpenMPOffloadFlag {
+    local vendor=$(compilerVendor $1)
+    case "$vendor" in
+	    INTEL)           echo "-qnextgen" ;;
+	    *)		     echo ""						;;
+    esac
+}    
 
 function fCompilerModuleDirFlag {
     local vendor=$(compilerVendor "$1")
@@ -455,19 +465,17 @@ function fCompilerModuleDirFlag {
 }
 
 function compilerSupportsOpenMP {
-    local compiler="$1"
-    local vendor=$(compilerVendor "${compiler}")
-    local ompFlag=$(compilerOpenMPFlag "${compiler}")
+    local compiler_arg="$1"
+    #local vendor=$(compilerVendor "${compiler}")
+    local ompFlag=$(compilerOpenMPFlag "${compiler_arg}")
 
     local filename="${SCRIPTS_DIR}/tests/openmp.cpp"
     local binary="${SCRIPTS_DIR}/tests/openmp"
-
+  
     rm -f "${binary}"
-
     # Test compilation
-    "${compiler}" "${ompFlag}" "${filename}" -o "${binary}" > /dev/null 2>&1
-
-    if [[ ! -a "${binary}" ]]; then
+    "${compiler_arg}" "${ompFlag}" "${filename}" -o "${binary}" > /dev/null 2>&1
+    if [[ ! -e "${binary}" ]]; then
         echo 0
         return
     fi
@@ -475,6 +483,39 @@ function compilerSupportsOpenMP {
     if [[ "$?" -eq 0 ]]; then
         # Test binary
         "${binary}"
+
+        if [[ "$?" -eq 0 ]]; then
+            echo 1
+        else
+            echo 0
+        fi
+    else
+        echo 0
+    fi
+
+    if [ ! -z "${binary}" ]; then
+        rm -f "${binary}"
+    fi
+}
+
+# OMP Offload Testing (Anoop)
+
+function compilerSupportsOpenMPOffload {
+    local compiler_arg="$1"
+    local filename="${SCRIPTS_DIR}/tests/openmpoffload.cpp"
+    local binary="${SCRIPTS_DIR}/tests/openmpoffload"
+    local offloadFlag=$(compilerOpenMPOffloadFlag "${compiler_arg}")
+    rm -f "${binary}"
+    # Test compilation
+    "${compiler_arg}" "${offloadFlag}" "${filename}" -o "${binary}" > /dev/null 2>&1
+    if [[ ! -e "${binary}" ]]; then
+        echo 0
+        return
+    fi
+
+    if [[ "$?" -eq 0 ]]; then
+        # Test binary
+        "${binary}" 
 
         if [[ "$?" -eq 0 ]]; then
             echo 1
