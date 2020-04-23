@@ -239,7 +239,7 @@ ifdef OCCA_OPENMP_ENABLED
     compilerFlags += $(call compilerOpenMPFlag)
   endif 
 else
-
+  openmpEnabled = $(compilerSupportsOpenMP)
   # OMP Offload Testing (Anoop)
   ifeq ($(compilerSupportsOpenMPOffload),1)
     compilerFlags += -qnextgen -fiopenmp -fopenmp-targets=spir64 
